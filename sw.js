@@ -1,6 +1,6 @@
 // TF Photo Studio — offline support.
 // Change VERSION whenever index.html is updated so phones pick up the new copy.
-const VERSION = 'tfps-v2';
+const VERSION = 'tfps-v3';
 const FILES = [
   './',
   './index.html',

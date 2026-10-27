@@ -446,6 +446,41 @@ input[type=range].temp::-moz-range-progress,input[type=range].tint::-moz-range-p
 .ai-msg.err{color:var(--err)} .ai-msg.ok{color:var(--ok)}
 .ai-bn{margin-top:10px;padding:9px 11px;border-radius:10px;background:var(--surface-3);color:var(--text-2);font-size:13.5px;line-height:1.7}
 #btnAiSettingsTop{display:none}
+.ai-one .ai-gear{color:#fff;margin:-6px -6px 0 0}
+.ai-one .ai-gear:hover{background:rgba(255,255,255,.15);color:#fff}
+.ai-bgrow{display:flex;align-items:center;gap:8px;margin:2px 0 12px;flex-wrap:wrap}
+.ai-bgrow span{font-size:12px;font-weight:700;color:rgba(255,255,255,.85);margin-right:2px}
+.ai-bgrow .sw{border:2px solid rgba(255,255,255,.55)}
+.ai-bgrow .sw.on{outline:3px solid #fff;outline-offset:2px}
+.ai-one-btn{width:100%;height:46px;font-size:15px;background:#fff;color:#2f3cff;border:0;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+.ai-one-btn svg.ic{color:#5a3dff}
+.ai-pane .ai-one-btn{background:var(--accent);color:#fff}
+.s1-cta{grid-template-columns:1fr 1fr}
+.ai-cta{background:linear-gradient(135deg,#2f5bff,#8b3dff);color:#fff;border:0;box-shadow:0 4px 14px rgba(80,70,255,.3)}
+.ai-cta:hover{color:#fff;filter:brightness(1.06)}
+.ai-cta svg.ic{color:#fff}
+@media (max-width:860px){
+  /* solid header so page text never shows through it */
+  .topbar{background:var(--surface)}
+  .brand{flex:1 1 auto;min-width:0}
+  .brand > div:last-child{min-width:0;overflow:hidden}
+  .brand-t{overflow:hidden;text-overflow:ellipsis}
+  .top-actions{gap:2px;flex:none}
+  .install-btn{height:34px;padding:0 11px}
+  /* the Back / Continue bar gets its own solid strip instead of floating over cards */
+  .btn-pair.sticky-cta{background:var(--bg);margin:0 -12px;padding:8px 12px;border-top:1px solid var(--border)}
+  .sticky-cta:not(.btn-pair){box-shadow:0 0 0 8px var(--bg),0 4px 14px rgba(47,91,255,.25)}
+  .panel{padding-bottom:6px}
+  /* smaller sticky preview on steps 2–4 leaves room for the controls */
+  .step-panel:not(#step1) .stage-body{height:31vh;height:31dvh;min-height:200px}
+  /* messages appear above the bottom bars, not on top of the buttons */
+  .toasts{bottom:calc(140px + env(safe-area-inset-bottom))}
+}
+@media (max-width:380px){
+  .install-btn{width:34px;padding:0;justify-content:center;font-size:0;gap:0}
+  .install-btn svg{width:17px;height:17px}
+  .logo{width:32px;height:32px}
+}
 @media (min-width:700px){#btnAiSettingsTop{display:grid}}
 </style>
 </head>
@@ -524,6 +559,18 @@ input[type=range].temp::-moz-range-progress,input[type=range].tint::-moz-range-p
       <!-- STEP 1 -->
       <div class="workspace step-panel" id="step1">
         <div class="panel">
+          <div class="card feature ai-one" id="aiOneCard1">
+            <div class="card-h" style="margin-bottom:6px"><h3 class="card-t"><i data-i="sparkle"></i>AI one-tap passport</h3><button class="icon-btn ai-gear" data-ai-settings title="Gemini settings"><i data-i="gear"></i></button></div>
+            <p>Background removal, color &amp; lighting correction — all done by Gemini in one tap.</p>
+            <div class="ai-bgrow"><span>Backdrop</span>
+              <button class="sw sm" data-aibg="#ffffff" style="background:#fff" title="White"></button>
+              <button class="sw sm" data-aibg="#d5e6f7" style="background:#d5e6f7" title="Light blue"></button>
+              <button class="sw sm" data-aibg="#4a90e2" style="background:#4a90e2" title="Sky blue"></button>
+              <button class="sw sm" data-aibg="#0a5bc4" style="background:#0a5bc4" title="Studio blue"></button>
+              <button class="sw sm" data-aibg="#d5dae0" style="background:#d5dae0" title="Light grey"></button>
+            </div>
+            <button class="btn ai-one-btn" data-ai-one><i data-i="wand"></i>Make passport-ready</button>
+          </div>
           <div class="card">
             <div class="card-h"><h3 class="card-t"><i data-i="crop"></i>Photo size</h3><span class="badge accent num" id="sizeBadge">40 × 50 mm</span></div>
             <div class="grid2" id="sizeGrid">
@@ -568,7 +615,7 @@ input[type=range].temp::-moz-range-progress,input[type=range].tint::-moz-range-p
             </div>
           </div>
 
-          <button class="btn primary lg block sticky-cta" data-go="2">Continue to background<i data-i="arrowr"></i></button>
+          <div class="btn-pair sticky-cta s1-cta"><button class="btn lg ai-cta" data-ai-one><i data-i="sparkle"></i>AI Auto-fix</button><button class="btn primary lg" data-go="2">Continue<i data-i="arrowr"></i></button></div>
         </div>
         <div class="stage">
           <div class="stage-bar">
@@ -591,22 +638,24 @@ input[type=range].temp::-moz-range-progress,input[type=range].tint::-moz-range-p
           <div class="card feature">
             <div class="card-h" style="margin-bottom:6px"><h3 class="card-t"><i data-i="sparkle"></i>One-click studio finish</h3></div>
             <p>Removes the backdrop, corrects exposure &amp; white balance without clipping, and adds a light, natural retouch. Fully undoable.</p>
-            <button class="btn" id="btnMagic"><i data-i="wand"></i>Apply studio finish</button>
+            <button class="btn ai-one-btn" data-ai-one style="margin-bottom:8px"><i data-i="sparkle"></i>AI one-tap passport (Gemini)</button>
+            <button class="btn" id="btnMagic"><i data-i="wand"></i>Apply studio finish (offline)</button>
           </div>
 
           <div class="ptabs" id="s2Tabs">
+            <button data-pt="ai"><i data-i="sparkle"></i>AI</button>
             <button class="on" data-pt="bg"><i data-i="wand"></i>Background</button>
             <button data-pt="retouch"><i data-i="brush"></i>Retouch</button>
             <button data-pt="light"><i data-i="sliders"></i>Light</button>
             <button data-pt="beauty"><i data-i="smile"></i>Beauty</button>
-            <button data-pt="ai"><i data-i="sparkle"></i>AI</button>
           </div>
 
           <!-- Gemini AI pane -->
-          <div class="card" data-pane="ai" hidden>
+          <div class="card ai-pane" data-pane="ai" hidden>
             <div class="card-h"><h3 class="card-t"><i data-i="sparkle"></i>Gemini AI</h3><button class="btn sm ghost" id="btnAiSettings"><i data-i="gear" class="sm"></i>Settings</button></div>
             <div class="ai-status" id="aiStatus"><i class="dot"></i><span id="aiStatusText">No API key yet</span></div>
             <div class="stack" style="gap:8px">
+              <button class="btn primary lg block" data-ai-one><i data-i="wand"></i>One-tap passport ready</button>
               <button class="btn block ai-btn" id="btnAiBg2"><i data-i="sparkle"></i>AI remove background</button>
               <button class="btn block" id="btnAiTone2"><i data-i="palette"></i>AI color correction</button>
             </div>
@@ -2453,6 +2502,67 @@ $('#btnAiEdit').addEventListener('click', () => {
   aiApplyEdit(t);
 });
 aiFillModels(); aiUpdateStatus();
+
+/* ---- One tap: Gemini removes the backdrop AND fixes color/lighting in parallel ---- */
+function aiMaskFromKey(res, useMagenta, w, h){
+  const N = w*h, r = ctx2d(res, { willReadFrequently:true }).getImageData(0, 0, w, h).data;
+  const a = new Uint8ClampedArray(N), LO = 28, HI = 105;
+  for (let k=0, i=0; k<N; k++, i+=4) {
+    const key = useMagenta ? Math.min(r[i], r[i+2]) - r[i+1] : r[i+1] - Math.max(r[i], r[i+2]);
+    let v = 1 - (key - LO) / (HI - LO); v = v < 0 ? 0 : v > 1 ? 1 : v;
+    a[k] = v < 0.08 ? 0 : v > 0.94 ? 255 : Math.round(v * 255);
+  }
+  const bgReach = new Uint8Array(N), q = new Int32Array(N); let qh = 0, qt = 0;
+  const add = k => { if (!bgReach[k] && a[k] < 128) { bgReach[k] = 1; q[qt++] = k; } };
+  for (let x=0;x<w;x++){ add(x); add((h-1)*w + x); } for (let y=0;y<h;y++){ add(y*w); add(y*w + w-1); }
+  while (qh < qt) { const k = q[qh++], x = k % w; if (x>0) add(k-1); if (x<w-1) add(k+1); if (k>=w) add(k-w); if (k<N-w) add(k+w); }
+  let removed = 0; for (let k=0;k<N;k++){ if (a[k] < 128 && !bgReach[k]) a[k] = 255; if (a[k] < 128) removed++; }
+  const frac = removed / N;
+  if (frac < 0.03 || frac > 0.92) throw new Error('AI could not separate the background clearly. Please try again.');
+  return a;
+}
+function aiKeyColour(){
+  const d = S.cropData, N = d.length / 4; let greenish = 0;
+  for (let i=0;i<d.length;i+=16){ if (d[i+1] - Math.max(d[i], d[i+2]) > 40) greenish++; }
+  return greenish / (N/4) > 0.03;
+}
+function aiBgPrompt(useMagenta){
+  const keyName = useMagenta ? 'pure magenta (#FF00FF)' : 'pure chroma-key green (#00FF00)';
+  return `Edit this photo. Replace the ENTIRE background behind the person with a perfectly flat, uniform ${keyName} — no gradient, no shadow, no texture, no vignette. ` +
+    `Keep the person 100% unchanged: same face, every hair strand, clothes, pose, size, position and framing. Do not crop, zoom, move, redraw or retouch the person. ` +
+    `Do not add any ${useMagenta ? 'magenta' : 'green'} tint or reflections onto the person. Keep the same image size and aspect ratio.`;
+}
+const AI_PASSPORT_TONE = 'Professional passport photo correction: neutral white balance, natural true-to-life skin tone, even soft studio lighting on the face, ' +
+  'remove harsh shadows and color casts, balanced exposure with detail in hair and clothes, crisp but natural. ' +
+  "Keep the person's face, identity, expression, hair, clothes, background and framing exactly the same — do not beautify or reshape anything.";
+let aiOneBg = safeStore('tfps-ai-bg') || '#ffffff';
+function aiSyncOneBg(){ $$('[data-aibg]').forEach(b => b.classList.toggle('on', b.dataset.aibg === aiOneBg)); }
+$$('[data-aibg]').forEach(b => b.addEventListener('click', () => { aiOneBg = b.dataset.aibg; safeStore('tfps-ai-bg', aiOneBg); aiSyncOneBg(); }));
+aiSyncOneBg();
+$$('[data-ai-settings]').forEach(b => b.addEventListener('click', () => aiOpenSettings()));
+
+async function aiPassportReady(){
+  if (!S.src) { toast('Load a photo first', 'error'); return; }
+  if (!AI.key) { aiOpenSettings('Add your Gemini API key to use AI features.'); return; }
+  if (S.step !== 2) { await goStep(2); if (S.step !== 2) return; }
+  await aiRun('AI is preparing your passport photo… (about 20–40 sec)', async () => {
+    const w = S.crop.width, h = S.crop.height, src = aiWorkingCanvas(), useMagenta = aiKeyColour();
+    const [bgR, toneR] = await Promise.allSettled([ aiEditImage(src, aiBgPrompt(useMagenta)), aiEditImage(src, AI_PASSPORT_TONE) ]);
+    if (bgR.status === 'rejected' && toneR.status === 'rejected') throw bgR.reason;
+    let mask = null, bgErr = null;
+    if (bgR.status === 'fulfilled') { try { mask = aiMaskFromKey(bgR.value, useMagenta, w, h); } catch (e) { bgErr = e; } } else bgErr = bgR.reason;
+    if (!mask && toneR.status !== 'fulfilled') throw bgErr;
+    beginEdit();
+    if (toneR.status === 'fulfilled') { S.cropData = ctx2d(toneR.value, { willReadFrequently:true }).getImageData(0, 0, w, h).data; S.skin = null; }
+    if (mask) { S.mask = mask; S.bg = aiOneBg; S.maskEdited = true; }
+    syncStep2UI(); S.maskSoft = null; invalidateComposite(); drawColorThrottled();
+    window.scrollTo({ top:0, behavior:'smooth' });
+    if (mask && toneR.status === 'fulfilled') toast('Passport photo ready ✓ — check it, then Continue to layout', 'success');
+    else if (mask) toast('Background done, but color correction failed: ' + toneR.reason.message, 'error');
+    else toast('Colors fixed, but background failed: ' + (bgErr && bgErr.message), 'error');
+  });
+}
+$$('[data-ai-one]').forEach(b => b.addEventListener('click', aiPassportReady));
 
 $$('#brushSeg button').forEach(b => b.addEventListener('click', () => {
   S.brushMode = b.dataset.bm; $$('#brushSeg button').forEach(x => x.classList.toggle('on', x === b));
