@@ -377,7 +377,7 @@ input[type=range]:active::-webkit-slider-thumb{transform:scale(1.15)}
 .btn.picking{background:var(--accent);color:#fff;border-color:var(--accent)}
 
 /* ---------- v3: tabs, history, phone-first preview ---------- */
-.ptabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:4px;box-shadow:var(--shadow-sm);position:sticky;top:72px;z-index:12}
+.ptabs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:4px;box-shadow:var(--shadow-sm);position:sticky;top:72px;z-index:12}
 .ptabs button{border:0;background:transparent;border-radius:10px;padding:8px 2px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;font-weight:650;color:var(--text-3);transition:background .15s,color .15s}
 .ptabs button svg.ic{width:18px;height:18px}
 .ptabs button.on{background:var(--accent-soft);color:var(--accent)}
@@ -428,6 +428,26 @@ input[type=range].temp::-moz-range-progress,input[type=range].tint::-moz-range-p
 .inst-steps b{color:var(--text)}
 .inst-bn{margin-top:12px;padding:10px 12px;border-radius:10px;background:var(--surface-3);color:var(--text-2);line-height:1.7;font-size:14px}
 </style>
+<style>
+.ai-btn{background:linear-gradient(135deg,#2f5bff,#8b3dff);border:0;color:#fff;box-shadow:0 4px 14px rgba(80,70,255,.28)}
+.ai-btn:hover{filter:brightness(1.06);color:#fff}
+.ai-btn svg.ic{color:#fff}
+.ai-status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2);background:var(--surface-3);border-radius:10px;padding:8px 10px;margin-bottom:12px}
+.ai-status .dot{width:8px;height:8px;border-radius:50%;background:var(--warn);flex:none}
+.ai-status.ok .dot{background:var(--ok)}
+.ai-status button{margin-left:auto}
+.ai-text{width:100%;min-height:84px;resize:vertical;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:10px;padding:10px;font:14px/1.5 var(--font);outline:none}
+.ai-text:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-ring)}
+.ai-chips{margin:10px 0}
+.ai-sub{font-size:12px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;margin:0 0 8px}
+.key-row{display:flex;gap:6px}
+.key-row .input{flex:1}
+.ai-msg{font-size:12.5px;margin-top:8px;line-height:1.5}
+.ai-msg.err{color:var(--err)} .ai-msg.ok{color:var(--ok)}
+.ai-bn{margin-top:10px;padding:9px 11px;border-radius:10px;background:var(--surface-3);color:var(--text-2);font-size:13.5px;line-height:1.7}
+#btnAiSettingsTop{display:none}
+@media (min-width:700px){#btnAiSettingsTop{display:grid}}
+</style>
 </head>
 <body>
 <header class="topbar">
@@ -448,6 +468,7 @@ input[type=range].temp::-moz-range-progress,input[type=range].tint::-moz-range-p
     <div class="top-actions">
       <span class="status-pill" title="All processing happens on your device. Nothing is uploaded."><i class="dot"></i>Private · Works offline</span>
       <button class="install-btn" id="tfInstallBtn" hidden title="Install this app on your phone or computer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>Install</button>
+      <button class="icon-btn" id="btnAiSettingsTop" title="Gemini AI settings"><i data-i="gear"></i></button>
       <button class="icon-btn" id="btnTheme" title="Light / dark theme"><i data-i="moon"></i></button>
       <button class="icon-btn" id="btnHelp" title="Help"><i data-i="help"></i></button>
     </div>
@@ -578,12 +599,40 @@ input[type=range].temp::-moz-range-progress,input[type=range].tint::-moz-range-p
             <button data-pt="retouch"><i data-i="brush"></i>Retouch</button>
             <button data-pt="light"><i data-i="sliders"></i>Light</button>
             <button data-pt="beauty"><i data-i="smile"></i>Beauty</button>
+            <button data-pt="ai"><i data-i="sparkle"></i>AI</button>
+          </div>
+
+          <!-- Gemini AI pane -->
+          <div class="card" data-pane="ai" hidden>
+            <div class="card-h"><h3 class="card-t"><i data-i="sparkle"></i>Gemini AI</h3><button class="btn sm ghost" id="btnAiSettings"><i data-i="gear" class="sm"></i>Settings</button></div>
+            <div class="ai-status" id="aiStatus"><i class="dot"></i><span id="aiStatusText">No API key yet</span></div>
+            <div class="stack" style="gap:8px">
+              <button class="btn block ai-btn" id="btnAiBg2"><i data-i="sparkle"></i>AI remove background</button>
+              <button class="btn block" id="btnAiTone2"><i data-i="palette"></i>AI color correction</button>
+            </div>
+            <div class="divider"></div>
+            <p class="ai-sub">Edit with your own words</p>
+            <textarea class="ai-text" id="aiPrompt" placeholder="e.g. Make the hair black and fix the lighting&#10;বাংলাতেও লিখতে পারেন: চুল কালো করে দাও, আলো ঠিক করো"></textarea>
+            <div class="chips ai-chips" id="aiChips">
+              <button class="chip" data-ai="Professional color correction: neutral white balance, natural skin tone, balanced exposure.">Color fix</button>
+              <button class="chip" data-ai="Fix the lighting: even, soft studio light on the face, remove harsh shadows.">Fix lighting</button>
+              <button class="chip" data-ai="Make the hair natural black, keep the hairstyle the same.">Black hair</button>
+              <button class="chip" data-ai="Neatly comb the hair and tidy flyaway strands, keep the hairstyle.">Tidy hair</button>
+              <button class="chip" data-ai="Dress the person in a formal dark suit with a white shirt and a tie.">Formal suit</button>
+              <button class="chip" data-ai="Remove glare and reflections from the glasses.">Glasses glare</button>
+              <button class="chip" data-ai="Very light natural skin retouch: reduce blemishes, keep real skin texture.">Light retouch</button>
+            </div>
+            <label class="check" style="margin-bottom:12px"><input type="checkbox" id="aiKeepFace" checked><span>Keep face &amp; identity exactly the same (recommended for passport photos)</span></label>
+            <button class="btn primary lg block" id="btnAiEdit"><i data-i="wand"></i>Apply AI edit</button>
+            <p class="hint">Every AI change can be undone with the Undo button. Each request uses your Gemini API quota.</p>
           </div>
 
           <!-- Background pane -->
           <div class="card" data-pane="bg">
             <div class="card-h"><h3 class="card-t"><i data-i="wand"></i>Background removal</h3><button class="btn sm ghost" id="btnBgReset" title="Bring back the original background"><i data-i="reset" class="sm"></i>Reset</button></div>
             <button class="btn primary block" id="btnAutoBg"><i data-i="sparkle"></i>Auto remove background</button>
+            <button class="btn block ai-btn" id="btnAiBg" style="margin-top:8px"><i data-i="sparkle"></i>AI remove background (Gemini)</button>
+            <p class="hint">AI gives the cleanest hair edges. Afterwards you can still fine-tune with Edge softness, Halo fix and the brush below.</p>
             <div class="divider"></div>
             <div class="tools two" id="toolSegBg">
               <button class="tool on" data-tool="wand"><i data-i="wand"></i><span>Magic wand</span></button>
@@ -656,6 +705,7 @@ input[type=range].temp::-moz-range-progress,input[type=range].tint::-moz-range-p
           <!-- Light pane -->
           <div class="card" data-pane="light" hidden>
             <div class="card-h"><h3 class="card-t"><i data-i="sliders"></i>Light &amp; color</h3><div class="row"><button class="btn sm" id="btnAutoTone"><i data-i="sparkle"></i>Auto</button><button class="btn sm ghost" id="btnAdjReset"><i data-i="reset" class="sm"></i>Reset</button></div></div>
+            <button class="btn block ai-btn" id="btnAiTone" style="margin-bottom:12px"><i data-i="sparkle"></i>AI color correction (Gemini)</button>
             <div class="stack">
               <div class="slider"><div class="slider-h"><span>Exposure</span><output data-for="brightness">0</output></div><input type="range" data-adj="brightness" min="-60" max="60" value="0"></div>
               <div class="slider"><div class="slider-h"><span>Contrast</span><output data-for="contrast">0</output></div><input type="range" data-adj="contrast" min="-60" max="60" value="0"></div>
@@ -928,6 +978,29 @@ input[type=range].temp::-moz-range-progress,input[type=range].tint::-moz-range-p
 </nav>
 
 <!-- Help modal -->
+<div class="modal" id="aiModal" hidden>
+  <div class="modal-box">
+    <div class="modal-h"><h3>Gemini AI settings</h3><button class="icon-btn" data-close><i data-i="x"></i></button></div>
+    <div class="modal-b">
+      <div class="field">
+        <span class="lbl">Gemini API key</span>
+        <div class="key-row">
+          <input class="input" id="aiKey" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your key (starts with AIza…)">
+          <button class="btn" id="aiKeyShow" title="Show / hide"><i data-i="eye"></i></button>
+        </div>
+        <p class="hint" style="margin:2px 0 0">Get a key at <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. It is saved only on this device and sent only to Google.</p>
+      </div>
+      <div class="field" style="margin-top:14px">
+        <span class="lbl">Image model</span>
+        <select class="select" id="aiModel"></select>
+        <p class="hint" style="margin:2px 0 0">Nano Banana 2 = <b>gemini-3.1-flash-image-preview</b>. Tap “Save &amp; test” to load every image model your key can use.</p>
+      </div>
+      <div class="ai-msg" id="aiMsg"></div>
+      <div class="ai-bn">ধাপ: উপরের লিংক থেকে Gemini API key কপি করুন → এখানে পেস্ট করুন → <b>Save &amp; test</b> চাপুন। key শুধু এই ফোন/কম্পিউটারেই থাকবে।</div>
+    </div>
+    <div class="modal-f"><button class="btn" id="aiKeyRemove">Remove key</button><button class="btn primary" id="aiKeySave">Save &amp; test</button></div>
+  </div>
+</div>
 <div class="modal" id="installModal" hidden>
   <div class="modal-box">
     <div class="modal-h"><h3>Install TF Photo Studio</h3><button class="icon-btn" data-close><i data-i="x"></i></button></div>
@@ -1004,6 +1077,8 @@ const SAMPLE_SRC = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAUEB
 
 /* ---------------- Icons ---------------- */
 const ICONS = {
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  key:'<circle cx="7.5" cy="15.5" r="4.5"/><path d="m10.7 12.3 9.3-9.3M17 6l3 3M14 9l2 2"/>',
   user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/>',
   compress:'<path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/>',
   moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
@@ -2190,6 +2265,195 @@ function setS2Tab(t){
   else setTool('none');
 }
 $$('#s2Tabs button').forEach(b => b.addEventListener('click', () => setS2Tab(b.dataset.pt)));
+/* ================= Gemini AI (user's own API key) ================= */
+const AI_DEFAULT_MODEL = 'gemini-3.1-flash-image-preview';
+const AI_KNOWN = [
+  ['gemini-3.1-flash-image-preview', 'Nano Banana 2 (gemini-3.1-flash-image-preview)'],
+  ['gemini-3-pro-image-preview', 'Nano Banana Pro (gemini-3-pro-image-preview)'],
+  ['gemini-2.5-flash-image', 'Nano Banana (gemini-2.5-flash-image)']
+];
+const AI = { key: safeStore('tfps-gemini-key') || '', model: safeStore('tfps-gemini-model') || AI_DEFAULT_MODEL, models: null };
+try { AI.models = JSON.parse(safeStore('tfps-gemini-models') || 'null'); } catch(e) { AI.models = null; }
+const AI_BASE = 'https://generativelanguage.googleapis.com/v1beta';
+
+function aiModelRank(id){
+  if (/3\.1-flash-image/.test(id)) return 0;
+  if (/flash-image/.test(id)) return 1 + (/2\.5/.test(id) ? 1 : 0);
+  if (/pro-image/.test(id)) return 3;
+  return 4;
+}
+function aiFillModels(){
+  const sel = $('#aiModel'); const list = (AI.models && AI.models.length) ? AI.models : AI_KNOWN;
+  const ids = list.map(m => m[0]);
+  if (AI.model && !ids.includes(AI.model)) list.unshift([AI.model, AI.model]);
+  sel.innerHTML = list.map(([id, label]) => `<option value="${id}">${label}</option>`).join('');
+  sel.value = AI.model;
+}
+function aiUpdateStatus(){
+  const st = $('#aiStatus'), t = $('#aiStatusText');
+  if (AI.key) { st.classList.add('ok'); t.textContent = 'Ready · ' + AI.model; }
+  else { st.classList.remove('ok'); t.textContent = 'No API key yet — tap Settings to add your Gemini key'; }
+}
+function aiOpenSettings(msg){
+  $('#aiKey').value = AI.key; $('#aiKey').type = 'password'; aiFillModels();
+  const m = $('#aiMsg'); m.className = 'ai-msg' + (msg ? ' err' : ''); m.textContent = msg || '';
+  openModal('#aiModal');
+}
+function aiErrorText(status, body){
+  const msg = (body && body.error && body.error.message) || '';
+  if (status === 400 && /api key/i.test(msg)) return 'This API key is not valid. Please check it and paste again.';
+  if (status === 429) return 'Gemini limit reached (quota). Wait a little, or enable billing for this model in Google AI Studio.';
+  if (status === 403) return 'This key is not allowed to use Gemini. Check the key in Google AI Studio.';
+  if (status === 404) return 'This model is not available for your key. Choose another model in Settings.';
+  return msg ? ('Gemini: ' + msg) : ('Gemini request failed (' + status + ').');
+}
+async function aiFetch(path, opts){
+  const ctrl = new AbortController(); const tm = setTimeout(() => ctrl.abort(), 150000);
+  let res;
+  try { res = await fetch(AI_BASE + path, { ...opts, signal: ctrl.signal, headers: { 'x-goog-api-key': opts.key, ...(opts.body ? { 'Content-Type': 'application/json' } : {}) } }); }
+  catch (e) { throw new Error(e.name === 'AbortError' ? 'Gemini took too long. Please try again.' : 'No internet connection — AI features need internet.'); }
+  finally { clearTimeout(tm); }
+  let body = null; try { body = await res.json(); } catch(e) {}
+  if (!res.ok) throw new Error(aiErrorText(res.status, body));
+  return body;
+}
+async function aiListModels(key){
+  const body = await aiFetch('/models?pageSize=1000', { method:'GET', key });
+  const out = (body.models || [])
+    .filter(m => (m.supportedGenerationMethods || []).includes('generateContent') && /image/i.test(m.name) && !/imagen|embedding/i.test(m.name))
+    .map(m => { const id = m.name.replace(/^models\//, ''); return [id, (m.displayName ? m.displayName + ' (' + id + ')' : id)]; });
+  out.sort((a, b) => aiModelRank(a[0]) - aiModelRank(b[0]) || b[0].localeCompare(a[0]));
+  return out;
+}
+$('#aiKeyShow').addEventListener('click', () => { const k = $('#aiKey'); k.type = k.type === 'password' ? 'text' : 'password'; });
+$('#aiKeySave').addEventListener('click', async () => {
+  const key = $('#aiKey').value.trim(), m = $('#aiMsg');
+  if (!key) { m.className = 'ai-msg err'; m.textContent = 'Please paste your Gemini API key first.'; return; }
+  m.className = 'ai-msg'; m.textContent = 'Checking your key with Google…';
+  try {
+    const models = await aiListModels(key);
+    AI.key = key; safeStore('tfps-gemini-key', key);
+    if (models.length) { AI.models = models; safeStore('tfps-gemini-models', JSON.stringify(models)); }
+    const chosen = $('#aiModel').value;
+    const ids = (AI.models || AI_KNOWN).map(x => x[0]);
+    AI.model = ids.includes(chosen) ? chosen : (ids.includes(AI_DEFAULT_MODEL) ? AI_DEFAULT_MODEL : ids[0] || AI_DEFAULT_MODEL);
+    safeStore('tfps-gemini-model', AI.model); aiFillModels(); aiUpdateStatus();
+    m.className = 'ai-msg ok'; m.textContent = '✓ Key works. ' + (models.length ? models.length + ' image model(s) found. ' : '') + 'Using ' + AI.model + '.';
+    toast('Gemini key saved', 'success');
+  } catch (e) { m.className = 'ai-msg err'; m.textContent = e.message; }
+});
+$('#aiModel').addEventListener('change', () => { AI.model = $('#aiModel').value; safeStore('tfps-gemini-model', AI.model); aiUpdateStatus(); });
+$('#aiKeyRemove').addEventListener('click', () => {
+  AI.key = ''; AI.models = null; try { localStorage.removeItem('tfps-gemini-key'); localStorage.removeItem('tfps-gemini-models'); } catch(e) {}
+  $('#aiKey').value = ''; aiFillModels(); aiUpdateStatus(); const m = $('#aiMsg'); m.className = 'ai-msg'; m.textContent = 'Key removed from this device.';
+});
+$('#btnAiSettings').addEventListener('click', () => aiOpenSettings());
+$('#btnAiSettingsTop').addEventListener('click', () => aiOpenSettings());
+
+/* Send an image + instruction, get the edited image back at exactly w × h */
+async function aiEditImage(srcCanvas, instruction){
+  if (!AI.key) { aiOpenSettings('Add your Gemini API key to use AI features.'); throw new Error('__nokey'); }
+  const w = srcCanvas.width, h = srcCanvas.height;
+  const b64 = srcCanvas.toDataURL('image/png').split(',')[1];
+  const body = await aiFetch('/models/' + encodeURIComponent(AI.model) + ':generateContent', {
+    method:'POST', key: AI.key,
+    body: JSON.stringify({
+      contents: [{ role:'user', parts: [ { inline_data: { mime_type:'image/png', data: b64 } }, { text: instruction } ] }],
+      generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
+    })
+  });
+  const cand = (body.candidates || [])[0];
+  const parts = (cand && cand.content && cand.content.parts) || [];
+  const img = parts.find(p => (p.inlineData || p.inline_data));
+  if (!img) {
+    const txt = parts.map(p => p.text).filter(Boolean).join(' ').trim();
+    const why = (body.promptFeedback && body.promptFeedback.blockReason) || (cand && cand.finishReason) || '';
+    throw new Error('Gemini did not return an image' + (why ? ' (' + why + ')' : '') + (txt ? ': ' + txt.slice(0, 160) : '. Try rewording your request.'));
+  }
+  const d = img.inlineData || img.inline_data;
+  const el = await new Promise((ok, bad) => { const im = new Image(); im.onload = () => ok(im); im.onerror = () => bad(new Error('Could not read the AI image.')); im.src = 'data:' + (d.mimeType || d.mime_type || 'image/png') + ';base64,' + d.data; });
+  // fit back to the exact photo size (cover, centred) so it lines up with the crop
+  const out = makeCanvas(w, h), oc = ctx2d(out, { willReadFrequently:true });
+  const s = Math.max(w / el.naturalWidth, h / el.naturalHeight), dw = el.naturalWidth * s, dh = el.naturalHeight * s;
+  oc.imageSmoothingQuality = 'high'; oc.drawImage(el, (w - dw) / 2, (h - dh) / 2, dw, dh);
+  return out;
+}
+function aiWorkingCanvas(){
+  const w = S.crop.width, h = S.crop.height, c = makeCanvas(w, h);
+  ctx2d(c).putImageData(new ImageData(new Uint8ClampedArray(S.cropData), w, h), 0, 0);
+  return c;
+}
+async function aiRun(label, fn){
+  if (!S.crop) { toast('Load a photo first', 'error'); return; }
+  if (!AI.key) { aiOpenSettings('Add your Gemini API key to use AI features.'); return; }
+  try { await withBusy(label, fn); }
+  catch (e) { if (e.message !== '__nokey') toast(e.message, 'error'); }
+}
+
+/* AI background removal: Gemini repaints only the backdrop as a flat key colour; the app turns that
+   into a soft cut-out mask on YOUR original pixels — so the face is never changed and every
+   existing tool (edge softness, halo fix, brush, backdrop colours) keeps working on it. */
+async function aiRemoveBackground(){
+  await aiRun('Gemini is removing the background…', async () => {
+    const w = S.crop.width, h = S.crop.height, N = w*h, d = S.cropData;
+    let greenish = 0; for (let i=0;i<d.length;i+=16){ if (d[i+1] - Math.max(d[i], d[i+2]) > 40) greenish++; }
+    const useMagenta = greenish / (N/4) > 0.03;
+    const keyName = useMagenta ? 'pure magenta (#FF00FF)' : 'pure chroma-key green (#00FF00)';
+    const prompt = `Edit this photo. Replace the ENTIRE background behind the person with a perfectly flat, uniform ${keyName} — no gradient, no shadow, no texture, no vignette. ` +
+      `Keep the person 100% unchanged: same face, every hair strand, clothes, pose, size, position and framing. Do not crop, zoom, move, redraw or retouch the person. ` +
+      `Do not add any ${useMagenta ? 'magenta' : 'green'} tint or reflections onto the person. Keep the same image size and aspect ratio.`;
+    const res = await aiEditImage(aiWorkingCanvas(), prompt);
+    const r = ctx2d(res, { willReadFrequently:true }).getImageData(0, 0, w, h).data;
+    const a = new Uint8ClampedArray(N), LO = 28, HI = 105;
+    for (let k=0, i=0; k<N; k++, i+=4) {
+      const key = useMagenta ? Math.min(r[i], r[i+2]) - r[i+1] : r[i+1] - Math.max(r[i], r[i+2]);
+      let v = 1 - (key - LO) / (HI - LO); v = v < 0 ? 0 : v > 1 ? 1 : v;
+      a[k] = v < 0.08 ? 0 : v > 0.94 ? 255 : Math.round(v * 255);
+    }
+    // keep only background connected to the photo edge (fills accidental holes inside the person)
+    const bgReach = new Uint8Array(N), q = new Int32Array(N); let qh = 0, qt = 0;
+    const add = k => { if (!bgReach[k] && a[k] < 128) { bgReach[k] = 1; q[qt++] = k; } };
+    for (let x=0;x<w;x++){ add(x); add((h-1)*w + x); } for (let y=0;y<h;y++){ add(y*w); add(y*w + w-1); }
+    while (qh < qt) { const k = q[qh++], x = k % w; if (x>0) add(k-1); if (x<w-1) add(k+1); if (k>=w) add(k-w); if (k<N-w) add(k+w); }
+    let removed = 0; for (let k=0;k<N;k++){ if (a[k] < 128 && !bgReach[k]) a[k] = 255; if (a[k] < 128) removed++; }
+    const frac = removed / N;
+    if (frac < 0.03 || frac > 0.92) throw new Error('AI could not separate the background clearly. Please try again.');
+    beginEdit('mask'); S.mask = a; if (S.bg === 'original') S.bg = '#0a5bc4';
+    syncStep2UI(); maskChanged();
+    toast('AI background removed — fine-tune edges below if needed', 'success');
+  });
+}
+
+async function aiApplyEdit(userText, label){
+  const keep = $('#aiKeepFace').checked;
+  const prompt = `Edit this passport/ID portrait photo. Request: ${userText}\n\n` +
+    `Rules: apply ONLY the requested change. Keep the exact same framing, crop, size, head position and pose. ` +
+    (keep ? `Keep the person's face, identity and facial features exactly the same — do not beautify or reshape the face. ` : '') +
+    `Photorealistic, natural result. The request may be written in Bengali or English.`;
+  await aiRun(label || 'Gemini is editing your photo…', async () => {
+    const res = await aiEditImage(aiWorkingCanvas(), prompt);
+    const w = S.crop.width, h = S.crop.height;
+    beginEdit(); S.cropData = ctx2d(res, { willReadFrequently:true }).getImageData(0, 0, w, h).data; S.skin = null;
+    invalidateComposite(); drawColorThrottled();
+    toast('AI edit applied — use Undo to go back', 'success');
+  });
+}
+const AI_TONE_PROMPT = 'Professional color correction: neutral white balance, natural true-to-life skin tones, balanced exposure, recover shadows and highlights, slightly crisp. Do not change anything else.';
+$('#btnAiBg').addEventListener('click', aiRemoveBackground);
+$('#btnAiBg2').addEventListener('click', aiRemoveBackground);
+$('#btnAiTone').addEventListener('click', () => aiApplyEdit(AI_TONE_PROMPT, 'Gemini is correcting colors…'));
+$('#btnAiTone2').addEventListener('click', () => aiApplyEdit(AI_TONE_PROMPT, 'Gemini is correcting colors…'));
+$$('#aiChips .chip').forEach(c => c.addEventListener('click', () => {
+  const t = $('#aiPrompt'); const add = c.dataset.ai;
+  t.value = t.value.trim() ? t.value.trim() + ' ' + add : add; t.focus();
+}));
+$('#btnAiEdit').addEventListener('click', () => {
+  const t = $('#aiPrompt').value.trim();
+  if (!t) { toast('Write what you want to change, or tap a suggestion', 'info'); $('#aiPrompt').focus(); return; }
+  aiApplyEdit(t);
+});
+aiFillModels(); aiUpdateStatus();
+
 $$('#brushSeg button').forEach(b => b.addEventListener('click', () => {
   S.brushMode = b.dataset.bm; $$('#brushSeg button').forEach(x => x.classList.toggle('on', x === b));
   $('#brushHint').textContent = { smart:'Erases only colors similar to where you start the stroke — safe near hair, face and shoulders. Raise tolerance for stubborn patches.', erase:'Paint over leftover background. Soft edges blend naturally into hair.', restore:'Paint back parts of the person that were removed by mistake.' }[S.brushMode];
