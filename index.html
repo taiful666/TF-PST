@@ -456,6 +456,13 @@ input[type=range].temp::-moz-range-progress,input[type=range].tint::-moz-range-p
 .ai-one-btn svg.ic{color:#5a3dff}
 .ai-pane .ai-one-btn{background:var(--accent);color:#fff}
 .s1-cta{grid-template-columns:1fr 1fr}
+.ai-bgrow-sheet .sw{border:1px solid var(--border-strong)}
+.ai-bgrow-sheet .sw.on{outline:3px solid var(--accent);outline-offset:2px}
+.ai-bgname{font-size:12.5px;font-weight:600;color:var(--text-2);margin-left:4px}
+.ai-opts{display:flex;flex-direction:column;gap:10px}
+.ai-opts .check{font-size:13.5px;line-height:1.45}
+.ai-opts .check b{color:var(--text)}
+.ai-opts .check input{width:19px;height:19px}
 .ai-cta{background:linear-gradient(135deg,#2f5bff,#8b3dff);color:#fff;border:0;box-shadow:0 4px 14px rgba(80,70,255,.3)}
 .ai-cta:hover{color:#fff;filter:brightness(1.06)}
 .ai-cta svg.ic{color:#fff}
@@ -563,6 +570,7 @@ input[type=range].temp::-moz-range-progress,input[type=range].tint::-moz-range-p
             <div class="card-h" style="margin-bottom:6px"><h3 class="card-t"><i data-i="sparkle"></i>AI one-tap passport</h3><button class="icon-btn ai-gear" data-ai-settings title="Gemini settings"><i data-i="gear"></i></button></div>
             <p>Background removal, color &amp; lighting correction — all done by Gemini in one tap.</p>
             <div class="ai-bgrow"><span>Backdrop</span>
+              <button class="sw sm" data-aibg="#f4f3ef" style="background:#f4f3ef" title="Off-white"></button>
               <button class="sw sm" data-aibg="#ffffff" style="background:#fff" title="White"></button>
               <button class="sw sm" data-aibg="#d5e6f7" style="background:#d5e6f7" title="Light blue"></button>
               <button class="sw sm" data-aibg="#4a90e2" style="background:#4a90e2" title="Sky blue"></button>
@@ -1048,6 +1056,37 @@ input[type=range].temp::-moz-range-progress,input[type=range].tint::-moz-range-p
       <div class="ai-bn">ধাপ: উপরের লিংক থেকে Gemini API key কপি করুন → এখানে পেস্ট করুন → <b>Save &amp; test</b> চাপুন। key শুধু এই ফোন/কম্পিউটারেই থাকবে।</div>
     </div>
     <div class="modal-f"><button class="btn" id="aiKeyRemove">Remove key</button><button class="btn primary" id="aiKeySave">Save &amp; test</button></div>
+  </div>
+</div>
+<div class="modal" id="aiOneModal" hidden>
+  <div class="modal-box">
+    <div class="modal-h"><h3>AI Auto-fix — passport ready</h3><button class="icon-btn" data-close><i data-i="x"></i></button></div>
+    <div class="modal-b">
+      <p class="ai-sub">Backdrop</p>
+      <div class="ai-bgrow ai-bgrow-sheet">
+        <button class="sw" data-aibg="#f4f3ef" style="background:#f4f3ef" title="Off-white"></button>
+        <button class="sw" data-aibg="#ffffff" style="background:#fff" title="White"></button>
+        <button class="sw" data-aibg="#d5e6f7" style="background:#d5e6f7" title="Light blue"></button>
+        <button class="sw" data-aibg="#4a90e2" style="background:#4a90e2" title="Sky blue"></button>
+        <button class="sw" data-aibg="#0a5bc4" style="background:#0a5bc4" title="Studio blue"></button>
+        <button class="sw" data-aibg="#d5dae0" style="background:#d5dae0" title="Light grey"></button>
+        <span id="aiBgName" class="ai-bgname"></span>
+      </div>
+      <p class="ai-sub" style="margin-top:14px">What should AI fix?</p>
+      <div class="ai-opts">
+        <label class="check"><input type="checkbox" data-aiopt="bg" checked><span><b>Remove background</b> — replace with the backdrop above</span></label>
+        <label class="check"><input type="checkbox" data-aiopt="color" checked><span><b>Color correction</b> — natural skin tone, no color cast</span></label>
+        <label class="check"><input type="checkbox" data-aiopt="light" checked><span><b>Brightness &amp; lighting</b> — even, soft studio light</span></label>
+        <label class="check"><input type="checkbox" data-aiopt="shadow" checked><span><b>Remove shadows</b> — on face, neck and behind the head</span></label>
+        <label class="check"><input type="checkbox" data-aiopt="expo" checked><span><b>Fix over-exposure</b> — blown highlights, shiny forehead/nose</span></label>
+        <label class="check"><input type="checkbox" data-aiopt="print" checked><span><b>Print-ready finish</b> — crisp, clean, true colors for printing</span></label>
+        <label class="check"><input type="checkbox" data-aiopt="face" checked><span><b>Keep face exactly the same</b> — no change to face or identity</span></label>
+      </div>
+      <p class="ai-sub" style="margin-top:14px">Extra instruction (optional)</p>
+      <textarea class="ai-text" id="aiOneExtra" style="min-height:60px" placeholder="e.g. hair a little neater / চুল একটু গুছিয়ে দাও"></textarea>
+      <div class="ai-bn">সব অপশন আগে থেকেই চালু আছে। শুধু <b>Start</b> চাপুন — ব্যাকগ্রাউন্ড, কালার, আলো, ছায়া সব ঠিক হয়ে প্রিন্টের জন্য রেডি হবে। মুখে কোনো পরিবর্তন হবে না।</div>
+    </div>
+    <div class="modal-f"><button class="btn" data-close>Cancel</button><button class="btn primary" id="aiOneStart"><i data-i="sparkle"></i>Start</button></div>
   </div>
 </div>
 <div class="modal" id="installModal" hidden>
@@ -2532,37 +2571,82 @@ function aiBgPrompt(useMagenta){
     `Keep the person 100% unchanged: same face, every hair strand, clothes, pose, size, position and framing. Do not crop, zoom, move, redraw or retouch the person. ` +
     `Do not add any ${useMagenta ? 'magenta' : 'green'} tint or reflections onto the person. Keep the same image size and aspect ratio.`;
 }
-const AI_PASSPORT_TONE = 'Professional passport photo correction: neutral white balance, natural true-to-life skin tone, even soft studio lighting on the face, ' +
-  'remove harsh shadows and color casts, balanced exposure with detail in hair and clothes, crisp but natural. ' +
-  "Keep the person's face, identity, expression, hair, clothes, background and framing exactly the same — do not beautify or reshape anything.";
-let aiOneBg = safeStore('tfps-ai-bg') || '#ffffff';
-function aiSyncOneBg(){ $$('[data-aibg]').forEach(b => b.classList.toggle('on', b.dataset.aibg === aiOneBg)); }
+const AI_OPT_DEFAULT = { bg:true, color:true, light:true, shadow:true, expo:true, print:true, face:true };
+let aiOpts = { ...AI_OPT_DEFAULT };
+try { Object.assign(aiOpts, JSON.parse(safeStore('tfps-ai-opts') || '{}')); } catch(e) {}
+let aiOneBg = safeStore('tfps-ai-bg') || '#f4f3ef';
+const AI_BG_NAMES = { '#f4f3ef':'Off-white', '#ffffff':'White', '#d5e6f7':'Light blue', '#4a90e2':'Sky blue', '#0a5bc4':'Studio blue', '#d5dae0':'Light grey' };
+function aiSyncOneBg(){
+  $$('[data-aibg]').forEach(b => b.classList.toggle('on', b.dataset.aibg === aiOneBg));
+  const n = $('#aiBgName'); if (n) n.textContent = AI_BG_NAMES[aiOneBg] || '';
+}
 $$('[data-aibg]').forEach(b => b.addEventListener('click', () => { aiOneBg = b.dataset.aibg; safeStore('tfps-ai-bg', aiOneBg); aiSyncOneBg(); }));
 aiSyncOneBg();
+$$('[data-aiopt]').forEach(c => {
+  c.checked = aiOpts[c.dataset.aiopt] !== false;
+  c.addEventListener('change', () => { aiOpts[c.dataset.aiopt] = c.checked; safeStore('tfps-ai-opts', JSON.stringify(aiOpts)); });
+});
 $$('[data-ai-settings]').forEach(b => b.addEventListener('click', () => aiOpenSettings()));
 
-async function aiPassportReady(){
+/* Build the Gemini instruction from the ticked options */
+function aiPassportPrompt(o, extra){
+  const todo = [];
+  if (o.color) todo.push('COLOR: correct the white balance to neutral, remove any yellow/green/blue/red color cast, give natural true-to-life skin tones and true clothing colors.');
+  if (o.light) todo.push('BRIGHTNESS & LIGHTING: even, soft, frontal studio lighting; the face clearly and evenly lit; balanced overall brightness and contrast.');
+  if (o.shadow) todo.push('SHADOWS: soften and remove harsh shadows on the face, under the eyes, nose, chin and neck, and any shadow cast behind the head.');
+  if (o.expo) todo.push('OVER-EXPOSURE: recover blown-out or too-bright areas; remove shiny/oily hot spots on the forehead, nose and cheeks; keep detail in highlights, no clipped whites.');
+  if (o.print) todo.push('PRINT-READY: crisp natural sharpness, clean detail in hair, eyes and clothes, no noise or blotches, accurate colors suitable for photo printing.');
+  if (extra) todo.push('ALSO: ' + extra + ' (the user may write in Bengali).');
+  if (!todo.length) return null;
+  const keep = o.face
+    ? "STRICT RULES: Do NOT change the face in any way — keep the exact same person, identity, facial features and proportions, eyes, nose, lips, skin texture, age and expression. No beautification, no slimming, no reshaping. "
+    : "Keep the person natural and recognizable. ";
+  return 'Professionally prepare this portrait as an official passport photo.\n- ' + todo.join('\n- ') + '\n\n' + keep +
+    'Keep the hair, clothes, pose, head position, framing and crop exactly the same. Photorealistic result, same image size and aspect ratio.';
+}
+
+function aiOpenOne(){
+  if (!S.src) { toast('Load a photo first', 'error'); return; }
+  if (!AI.key) { aiOpenSettings('Add your Gemini API key to use AI features.'); return; }
+  aiSyncOneBg(); openModal('#aiOneModal');
+}
+$('#aiOneStart').addEventListener('click', () => {
+  const o = { ...aiOpts }, extra = $('#aiOneExtra').value.trim();
+  if (!o.bg && !aiPassportPrompt(o, extra)) { toast('Tick at least one option', 'info'); return; }
+  $('#aiOneModal').hidden = true;
+  aiPassportReady(o, extra);
+});
+
+async function aiPassportReady(o, extra){
+  o = o || { ...aiOpts };
   if (!S.src) { toast('Load a photo first', 'error'); return; }
   if (!AI.key) { aiOpenSettings('Add your Gemini API key to use AI features.'); return; }
   if (S.step !== 2) { await goStep(2); if (S.step !== 2) return; }
+  const tonePrompt = aiPassportPrompt(o, extra);
   await aiRun('AI is preparing your passport photo… (about 20–40 sec)', async () => {
     const w = S.crop.width, h = S.crop.height, src = aiWorkingCanvas(), useMagenta = aiKeyColour();
-    const [bgR, toneR] = await Promise.allSettled([ aiEditImage(src, aiBgPrompt(useMagenta)), aiEditImage(src, AI_PASSPORT_TONE) ]);
-    if (bgR.status === 'rejected' && toneR.status === 'rejected') throw bgR.reason;
+    const skip = Promise.resolve(null);
+    const [bgR, toneR] = await Promise.allSettled([
+      o.bg ? aiEditImage(src, aiBgPrompt(useMagenta)) : skip,
+      tonePrompt ? aiEditImage(src, tonePrompt) : skip
+    ]);
+    const wantBg = !!o.bg, wantTone = !!tonePrompt;
     let mask = null, bgErr = null;
-    if (bgR.status === 'fulfilled') { try { mask = aiMaskFromKey(bgR.value, useMagenta, w, h); } catch (e) { bgErr = e; } } else bgErr = bgR.reason;
-    if (!mask && toneR.status !== 'fulfilled') throw bgErr;
+    if (wantBg) { if (bgR.status === 'fulfilled') { try { mask = aiMaskFromKey(bgR.value, useMagenta, w, h); } catch (e) { bgErr = e; } } else bgErr = bgR.reason; }
+    const toneOk = wantTone && toneR.status === 'fulfilled';
+    if (!mask && !toneOk) throw (bgErr || toneR.reason || new Error('AI did not return a result.'));
     beginEdit();
-    if (toneR.status === 'fulfilled') { S.cropData = ctx2d(toneR.value, { willReadFrequently:true }).getImageData(0, 0, w, h).data; S.skin = null; }
+    if (toneOk) { S.cropData = ctx2d(toneR.value, { willReadFrequently:true }).getImageData(0, 0, w, h).data; S.skin = null; }
     if (mask) { S.mask = mask; S.bg = aiOneBg; S.maskEdited = true; }
     syncStep2UI(); S.maskSoft = null; invalidateComposite(); drawColorThrottled();
     window.scrollTo({ top:0, behavior:'smooth' });
-    if (mask && toneR.status === 'fulfilled') toast('Passport photo ready ✓ — check it, then Continue to layout', 'success');
-    else if (mask) toast('Background done, but color correction failed: ' + toneR.reason.message, 'error');
-    else toast('Colors fixed, but background failed: ' + (bgErr && bgErr.message), 'error');
+    const bgFail = wantBg && !mask, toneFail = wantTone && !toneOk;
+    if (!bgFail && !toneFail) toast('Passport photo ready ✓ — check it, then Continue to layout', 'success');
+    else if (toneFail) toast('Background done, but color/light fix failed: ' + toneR.reason.message, 'error');
+    else toast('Color & light fixed, but background failed: ' + (bgErr && bgErr.message), 'error');
   });
 }
-$$('[data-ai-one]').forEach(b => b.addEventListener('click', aiPassportReady));
+$$('[data-ai-one]').forEach(b => b.addEventListener('click', aiOpenOne));
 
 $$('#brushSeg button').forEach(b => b.addEventListener('click', () => {
   S.brushMode = b.dataset.bm; $$('#brushSeg button').forEach(x => x.classList.toggle('on', x === b));
