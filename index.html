@@ -677,7 +677,7 @@ input[type=range].temp::-moz-range-progress,input[type=range].tint::-moz-range-p
               <button class="chip" data-ai="Neatly comb the hair and tidy flyaway strands, keep the hairstyle.">Tidy hair</button>
               <button class="chip" data-ai="Dress the person in a formal dark suit with a white shirt and a tie.">Formal suit</button>
               <button class="chip" data-ai="Remove glare and reflections from the glasses.">Glasses glare</button>
-              <button class="chip" data-ai="Very light natural skin retouch: reduce blemishes, keep real skin texture.">Light retouch</button>
+              <button class="chip" data-ai="Studio skin retouch: remove pimples, spots, blemishes, dark patches and under-eye darkness, even out skin tone, remove oily shine, fresh healthy look with natural skin texture.">Skin retouch</button>
             </div>
             <label class="check" style="margin-bottom:12px"><input type="checkbox" id="aiKeepFace" checked><span>Keep face &amp; identity exactly the same (recommended for passport photos)</span></label>
             <button class="btn primary lg block" id="btnAiEdit"><i data-i="wand"></i>Apply AI edit</button>
@@ -1075,16 +1075,23 @@ input[type=range].temp::-moz-range-progress,input[type=range].tint::-moz-range-p
       <p class="ai-sub" style="margin-top:14px">What should AI fix?</p>
       <div class="ai-opts">
         <label class="check"><input type="checkbox" data-aiopt="bg" checked><span><b>Remove background</b> — replace with the backdrop above</span></label>
+        <label class="check"><input type="checkbox" data-aiopt="retouch" checked><span><b>Skin retouch</b> — remove spots, pimples, dark patches &amp; under-eye darkness, fresh look</span></label>
         <label class="check"><input type="checkbox" data-aiopt="color" checked><span><b>Color correction</b> — natural skin tone, no color cast</span></label>
-        <label class="check"><input type="checkbox" data-aiopt="light" checked><span><b>Brightness &amp; lighting</b> — even, soft studio light</span></label>
+        <label class="check"><input type="checkbox" data-aiopt="light" checked><span><b>Studio lighting</b> — fix uneven light, sunlight patches, dark side of face</span></label>
         <label class="check"><input type="checkbox" data-aiopt="shadow" checked><span><b>Remove shadows</b> — on face, neck and behind the head</span></label>
         <label class="check"><input type="checkbox" data-aiopt="expo" checked><span><b>Fix over-exposure</b> — blown highlights, shiny forehead/nose</span></label>
         <label class="check"><input type="checkbox" data-aiopt="print" checked><span><b>Print-ready finish</b> — crisp, clean, true colors for printing</span></label>
-        <label class="check"><input type="checkbox" data-aiopt="face" checked><span><b>Keep face exactly the same</b> — no change to face or identity</span></label>
+        <label class="check"><input type="checkbox" data-aiopt="face" checked><span><b>Keep facial features the same</b> — same person: eyes, nose, lips, face shape untouched</span></label>
+      </div>
+      <p class="ai-sub" style="margin-top:14px">Retouch strength</p>
+      <div class="seg" id="aiLevel">
+        <button data-lv="natural">Natural</button>
+        <button data-lv="studio" class="on">Studio</button>
+        <button data-lv="fresh">Extra fresh</button>
       </div>
       <p class="ai-sub" style="margin-top:14px">Extra instruction (optional)</p>
       <textarea class="ai-text" id="aiOneExtra" style="min-height:60px" placeholder="e.g. hair a little neater / চুল একটু গুছিয়ে দাও"></textarea>
-      <div class="ai-bn">সব অপশন আগে থেকেই চালু আছে। শুধু <b>Start</b> চাপুন — ব্যাকগ্রাউন্ড, কালার, আলো, ছায়া সব ঠিক হয়ে প্রিন্টের জন্য রেডি হবে। মুখে কোনো পরিবর্তন হবে না।</div>
+      <div class="ai-bn">সব অপশন আগে থেকেই চালু আছে। শুধু <b>Start</b> চাপুন — ব্যাকগ্রাউন্ড, কালার, আলো, ছায়া সব ঠিক হয়ে প্রিন্টের জন্য রেডি হবে। চেহারার গঠন (চোখ, নাক, ঠোঁট, মুখের আকার) বদলাবে না, শুধু দাগ, আলো আর রং ঠিক হয়ে ফ্রেশ লুক আসবে।</div>
     </div>
     <div class="modal-f"><button class="btn" data-close>Cancel</button><button class="btn primary" id="aiOneStart"><i data-i="sparkle"></i>Start</button></div>
   </div>
@@ -2439,14 +2446,15 @@ $('#btnAiSettings').addEventListener('click', () => aiOpenSettings());
 $('#btnAiSettingsTop').addEventListener('click', () => aiOpenSettings());
 
 /* Send an image + instruction, get the edited image back at exactly w × h */
-async function aiEditImage(srcCanvas, instruction){
+async function aiEditImage(srcCanvas, instruction, outW, outH){
   if (!AI.key) { aiOpenSettings('Add your Gemini API key to use AI features.'); throw new Error('__nokey'); }
-  const w = srcCanvas.width, h = srcCanvas.height;
-  const b64 = srcCanvas.toDataURL('image/png').split(',')[1];
+  const w = outW || srcCanvas.width, h = outH || srcCanvas.height;
+  const big = srcCanvas.width * srcCanvas.height > 700000, mime = big ? 'image/jpeg' : 'image/png';
+  const b64 = srcCanvas.toDataURL(mime, 0.95).split(',')[1];
   const body = await aiFetch('/models/' + encodeURIComponent(AI.model) + ':generateContent', {
     method:'POST', key: AI.key,
     body: JSON.stringify({
-      contents: [{ role:'user', parts: [ { inline_data: { mime_type:'image/png', data: b64 } }, { text: instruction } ] }],
+      contents: [{ role:'user', parts: [ { inline_data: { mime_type: mime, data: b64 } }, { text: instruction } ] }],
       generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
     })
   });
@@ -2516,7 +2524,7 @@ async function aiApplyEdit(userText, label){
   const keep = $('#aiKeepFace').checked;
   const prompt = `Edit this passport/ID portrait photo. Request: ${userText}\n\n` +
     `Rules: apply ONLY the requested change. Keep the exact same framing, crop, size, head position and pose. ` +
-    (keep ? `Keep the person's face, identity and facial features exactly the same — do not beautify or reshape the face. ` : '') +
+    (keep ? `Keep the person's identity and facial features exactly the same — do not change the shape or size of the eyes, nose, lips, jaw, face or eyebrows. Skin retouching, lighting and color fixes are allowed when requested. ` : '') +
     `Photorealistic, natural result. The request may be written in Bengali or English.`;
   await aiRun(label || 'Gemini is editing your photo…', async () => {
     const res = await aiEditImage(aiWorkingCanvas(), prompt);
@@ -2571,7 +2579,7 @@ function aiBgPrompt(useMagenta){
     `Keep the person 100% unchanged: same face, every hair strand, clothes, pose, size, position and framing. Do not crop, zoom, move, redraw or retouch the person. ` +
     `Do not add any ${useMagenta ? 'magenta' : 'green'} tint or reflections onto the person. Keep the same image size and aspect ratio.`;
 }
-const AI_OPT_DEFAULT = { bg:true, color:true, light:true, shadow:true, expo:true, print:true, face:true };
+const AI_OPT_DEFAULT = { bg:true, retouch:true, color:true, light:true, shadow:true, expo:true, print:true, face:true };
 let aiOpts = { ...AI_OPT_DEFAULT };
 try { Object.assign(aiOpts, JSON.parse(safeStore('tfps-ai-opts') || '{}')); } catch(e) {}
 let aiOneBg = safeStore('tfps-ai-bg') || '#f4f3ef';
@@ -2589,30 +2597,67 @@ $$('[data-aiopt]').forEach(c => {
 $$('[data-ai-settings]').forEach(b => b.addEventListener('click', () => aiOpenSettings()));
 
 /* Build the Gemini instruction from the ticked options */
-function aiPassportPrompt(o, extra){
-  const todo = [];
-  if (o.color) todo.push('COLOR: correct the white balance to neutral, remove any yellow/green/blue/red color cast, give natural true-to-life skin tones and true clothing colors.');
-  if (o.light) todo.push('BRIGHTNESS & LIGHTING: even, soft, frontal studio lighting; the face clearly and evenly lit; balanced overall brightness and contrast.');
-  if (o.shadow) todo.push('SHADOWS: soften and remove harsh shadows on the face, under the eyes, nose, chin and neck, and any shadow cast behind the head.');
-  if (o.expo) todo.push('OVER-EXPOSURE: recover blown-out or too-bright areas; remove shiny/oily hot spots on the forehead, nose and cheeks; keep detail in highlights, no clipped whites.');
-  if (o.print) todo.push('PRINT-READY: crisp natural sharpness, clean detail in hair, eyes and clothes, no noise or blotches, accurate colors suitable for photo printing.');
-  if (extra) todo.push('ALSO: ' + extra + ' (the user may write in Bengali).');
-  if (!todo.length) return null;
+let aiLevel = safeStore('tfps-ai-level') || 'studio';
+function aiSyncLevel(){ $$('#aiLevel button').forEach(b => b.classList.toggle('on', b.dataset.lv === aiLevel)); }
+$$('#aiLevel button').forEach(b => b.addEventListener('click', () => { aiLevel = b.dataset.lv; safeStore('tfps-ai-level', aiLevel); aiSyncLevel(); }));
+aiSyncLevel();
+
+function aiPassportPrompt(o, extra, withKey, useMagenta){
+  const lv = { natural:'subtle, natural', studio:'professional high-end studio', fresh:'polished, glowing, magazine-quality but still realistic' }[aiLevel] || 'professional high-end studio';
+  const T = [];
+  if (o.retouch) T.push(`SKIN RETOUCH (${lv} level): remove every pimple, acne mark, spot, blemish, mole-like temporary mark, scratch and patch; remove dark patches and pigmentation blotches; ` +
+    `reduce dark circles and under-eye darkness/puffiness; reduce redness; remove oily shine and sweat; even out blotchy, uneven skin tone across forehead, cheeks, nose, chin and neck. ` +
+    `Give a clean, fresh, healthy, well-rested look. Keep real skin texture (fine pores), never plastic, waxy or blurred.`);
+  if (o.light) T.push('STUDIO LIGHTING: relight the face as if shot with a large soft-box in a professional photo studio — soft, even, frontal light on both sides of the face. ' +
+    'Fix uneven light: sunlight or a lamp hitting one side, bright patches, one cheek brighter or darker than the other, darker forehead or chin. Add catch-light to the eyes.');
+  if (o.shadow) T.push('SHADOWS: lift and soften harsh or dark shadows on the face — eye sockets, under the nose, under the lips, under the chin, on the neck and from hair or glasses; no dark side of the face.');
+  if (o.expo) T.push('OVER-EXPOSURE: recover blown-out, washed-out or too-bright areas (forehead, nose, cheeks, shirt) so detail and natural skin color return; also brighten areas that are too dark. Balanced exposure, no pure-white clipped skin.');
+  if (o.color) T.push("COLOR: neutral, correct white balance; remove yellow/orange (indoor or sunlight), green, blue or magenta color casts. Natural, healthy skin tone that matches the person's real complexion — do not whiten or change the skin color.");
+  if (o.print) T.push('PRINT-READY: crisp natural sharpness on eyes, eyebrows, eyelashes and hair; clean noise-free image; neat hair edges (tame obvious flyaway strands); accurate rich colors ready for photo-lab printing.');
+  if (extra) T.push('ALSO: ' + extra + ' (the request may be written in Bengali).');
+  if (withKey) T.push(`BACKGROUND: replace the ENTIRE background with a perfectly flat, uniform ${useMagenta ? 'pure magenta (#FF00FF)' : 'pure chroma-key green (#00FF00)'} — no gradient, no shadow, no texture. ` +
+    `Hair edges must stay detailed against it. Do not let the ${useMagenta ? 'magenta' : 'green'} color spill or reflect onto the skin, hair or clothes, and do not let it influence the color correction.`);
+  if (!T.length) return null;
   const keep = o.face
-    ? "STRICT RULES: Do NOT change the face in any way — keep the exact same person, identity, facial features and proportions, eyes, nose, lips, skin texture, age and expression. No beautification, no slimming, no reshaping. "
-    : "Keep the person natural and recognizable. ";
-  return 'Professionally prepare this portrait as an official passport photo.\n- ' + todo.join('\n- ') + '\n\n' + keep +
-    'Keep the hair, clothes, pose, head position, framing and crop exactly the same. Photorealistic result, same image size and aspect ratio.';
+    ? 'MUST STAY IDENTICAL (identity lock): this is an official passport photo, so the person must look exactly like themselves. Do NOT change the shape, size or position of the face, jaw, cheeks, eyes, eye color, eyebrows, nose, lips, teeth, ears, hairline or hairstyle; do not change age, expression, head pose, head size or framing; no slimming, no reshaping, no makeup, no filters. Only improve skin, light, color and cleanliness.'
+    : 'Keep the person clearly recognizable; keep pose and framing.';
+  return 'You are an expert passport-photo studio retoucher. Retouch this portrait into a flawless, studio-quality, print-ready passport photo.\n\n' +
+    T.map((t, i) => (i + 1) + '. ' + t).join('\n') + '\n\n' + keep + '\n\n' +
+    'Output: one photorealistic image with exactly the same framing, crop and aspect ratio as the input. Do not add text, borders or watermarks.';
+}
+
+/* Higher-resolution version of the current crop (straight from the original photo) so Gemini can see facial detail */
+function aiHiResSource(){
+  const w = S.crop.width, h = S.crop.height;
+  try {
+    if (S.mode === 'box' && S.src && S.box) {
+      const rot = rotateCanvas(S.src, totalDeg(), S.flip), b = S.box;
+      const srcH = b.h * rot.height, k = Math.max(1, Math.min(1536 / h, srcH / h));
+      const tw = Math.round(w * k), th = Math.round(h * k);
+      const c = cropResize(rot, b.x * rot.width, b.y * rot.height, b.w * rot.width, srcH, tw, th);
+      const flat = makeCanvas(tw, th), fc = ctx2d(flat); fc.fillStyle = '#fff'; fc.fillRect(0, 0, tw, th); fc.drawImage(c, 0, 0);
+      return flat;
+    }
+  } catch (e) {}
+  return aiWorkingCanvas();
+}
+/* Remove key-colour fringe from semi-transparent edge pixels */
+function aiDespill(d, mask, useMagenta){
+  for (let k = 0, i = 0; k < mask.length; k++, i += 4) {
+    if (mask[k] === 255) continue;
+    if (useMagenta) { const g = d[i+1]; if (d[i] > g && d[i+2] > g) { const m = Math.max(g, Math.min(d[i], d[i+2]) * 0.6); d[i] = Math.min(d[i], m + 20); d[i+2] = Math.min(d[i+2], m + 20); } }
+    else { const lim = Math.max(d[i], d[i+2]); if (d[i+1] > lim) d[i+1] = lim; }
+  }
 }
 
 function aiOpenOne(){
   if (!S.src) { toast('Load a photo first', 'error'); return; }
   if (!AI.key) { aiOpenSettings('Add your Gemini API key to use AI features.'); return; }
-  aiSyncOneBg(); openModal('#aiOneModal');
+  aiSyncOneBg(); aiSyncLevel(); openModal('#aiOneModal');
 }
 $('#aiOneStart').addEventListener('click', () => {
   const o = { ...aiOpts }, extra = $('#aiOneExtra').value.trim();
-  if (!o.bg && !aiPassportPrompt(o, extra)) { toast('Tick at least one option', 'info'); return; }
+  if (!o.bg && !aiPassportPrompt(o, extra, false)) { toast('Tick at least one option', 'info'); return; }
   $('#aiOneModal').hidden = true;
   aiPassportReady(o, extra);
 });
@@ -2622,28 +2667,33 @@ async function aiPassportReady(o, extra){
   if (!S.src) { toast('Load a photo first', 'error'); return; }
   if (!AI.key) { aiOpenSettings('Add your Gemini API key to use AI features.'); return; }
   if (S.step !== 2) { await goStep(2); if (S.step !== 2) return; }
-  const tonePrompt = aiPassportPrompt(o, extra);
-  await aiRun('AI is preparing your passport photo… (about 20–40 sec)', async () => {
-    const w = S.crop.width, h = S.crop.height, src = aiWorkingCanvas(), useMagenta = aiKeyColour();
-    const skip = Promise.resolve(null);
-    const [bgR, toneR] = await Promise.allSettled([
-      o.bg ? aiEditImage(src, aiBgPrompt(useMagenta)) : skip,
-      tonePrompt ? aiEditImage(src, tonePrompt) : skip
-    ]);
-    const wantBg = !!o.bg, wantTone = !!tonePrompt;
-    let mask = null, bgErr = null;
-    if (wantBg) { if (bgR.status === 'fulfilled') { try { mask = aiMaskFromKey(bgR.value, useMagenta, w, h); } catch (e) { bgErr = e; } } else bgErr = bgR.reason; }
-    const toneOk = wantTone && toneR.status === 'fulfilled';
-    if (!mask && !toneOk) throw (bgErr || toneR.reason || new Error('AI did not return a result.'));
+  await aiRun('AI studio retouch in progress… (about 20–40 sec)', async () => {
+    const w = S.crop.width, h = S.crop.height, useMagenta = aiKeyColour();
+    const src = aiHiResSource();
+    const retouch = aiPassportPrompt(o, extra, false) !== null;
+    let pixels = null, mask = null;
+    if (o.bg && retouch) {
+      // one request: retouch + key-colour backdrop, so the cut-out lines up perfectly with the retouched face
+      const res = await aiEditImage(src, aiPassportPrompt(o, extra, true, useMagenta), w, h);
+      const d = ctx2d(res, { willReadFrequently:true }).getImageData(0, 0, w, h).data;
+      try { mask = aiMaskFromKey(res, useMagenta, w, h); }
+      catch (e) {
+        // backdrop not clean enough: keep the retouch, cut out separately from the retouched image
+        const res2 = await aiEditImage(res, aiBgPrompt(useMagenta), w, h);
+        mask = aiMaskFromKey(res2, useMagenta, w, h);
+      }
+      aiDespill(d, mask, useMagenta); pixels = d;
+    } else if (o.bg) {
+      mask = aiMaskFromKey(await aiEditImage(src, aiBgPrompt(useMagenta), w, h), useMagenta, w, h);
+    } else {
+      pixels = ctx2d(await aiEditImage(src, aiPassportPrompt(o, extra, false), w, h), { willReadFrequently:true }).getImageData(0, 0, w, h).data;
+    }
     beginEdit();
-    if (toneOk) { S.cropData = ctx2d(toneR.value, { willReadFrequently:true }).getImageData(0, 0, w, h).data; S.skin = null; }
+    if (pixels) { S.cropData = pixels; S.skin = null; }
     if (mask) { S.mask = mask; S.bg = aiOneBg; S.maskEdited = true; }
     syncStep2UI(); S.maskSoft = null; invalidateComposite(); drawColorThrottled();
     window.scrollTo({ top:0, behavior:'smooth' });
-    const bgFail = wantBg && !mask, toneFail = wantTone && !toneOk;
-    if (!bgFail && !toneFail) toast('Passport photo ready ✓ — check it, then Continue to layout', 'success');
-    else if (toneFail) toast('Background done, but color/light fix failed: ' + toneR.reason.message, 'error');
-    else toast('Color & light fixed, but background failed: ' + (bgErr && bgErr.message), 'error');
+    toast('Studio passport photo ready ✓ — check it, then Continue to layout', 'success');
   });
 }
 $$('[data-ai-one]').forEach(b => b.addEventListener('click', aiOpenOne));
